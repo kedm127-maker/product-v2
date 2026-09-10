@@ -3,158 +3,159 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>台股產業相對估值</title>
+<title>台股相對估值</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --ground:#EDF0F4;
-  --surface:#FFFFFF;
-  --ink:#1A1D23;
-  --muted:#6B7280;
-  --rule:#D6DCE4;
-  --rule-soft:#E8ECF1;
-  --up:#C0392B;
-  --down:#17795E;
-  --flag:#A85B08;
-  --flag-bg:#FBF1E3;
-  --pick-bg:#E7F2EE;
+  --ground:#EDF0F4;--surface:#FFFFFF;--ink:#1A1D23;--muted:#6B7280;
+  --rule:#D6DCE4;--rule-soft:#E8ECF1;--up:#C0392B;--down:#17795E;
+  --flag-bg:#FBF1E3;--pick-bg:#E7F2EE;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{
-  margin:0;background:var(--ground);color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,"Noto Sans TC",sans-serif;
-  font-size:15px;line-height:1.5;
-}
+body{margin:0;background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,"Noto Sans TC",sans-serif;font-size:15px;line-height:1.5}
 .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
-.wrap{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
-
-header{display:flex;flex-wrap:wrap;align-items:baseline;gap:16px;margin-bottom:22px}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 80px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:16px;margin-bottom:20px}
 h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
-.meta{color:var(--muted);font-size:13px;margin-left:auto}
+.meta{color:var(--muted);font-size:13px;margin-left:auto;text-align:right}
 .meta b{font-weight:500;color:var(--ink)}
 
-.sectors{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px}
-.sectors button{
-  font:inherit;font-size:13px;padding:5px 11px;border:1px solid var(--rule);
-  background:var(--surface);color:var(--ink);border-radius:3px;cursor:pointer;
-}
-.sectors button:hover{border-color:#A9B4C2}
-.sectors button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.sectors button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.mode{display:flex;margin-bottom:14px;border-bottom:1px solid var(--rule)}
+.mode button{font:inherit;font-size:14px;padding:7px 16px;border:none;background:none;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.mode button[aria-pressed="true"]{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
 
-.bar-summary{
-  display:flex;flex-wrap:wrap;align-items:baseline;gap:20px;
-  padding:14px 16px;background:var(--surface);border:1px solid var(--rule);
-  border-bottom:none;
-}
-.bar-summary h2{font-size:16px;font-weight:600;margin:0}
-.bar-summary .kv{font-size:13px;color:var(--muted)}
-.bar-summary .kv span{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chips button{font:inherit;font-size:13px;padding:5px 11px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);border-radius:3px;cursor:pointer}
+.chips button:hover{border-color:#A9B4C2}
+.chips button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chips button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.tierrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:16px}
+.tierrow .lbl{font-size:13px;color:var(--muted);margin-right:4px}
+.tierrow button{font:inherit;font-size:12px;padding:4px 10px;border:1px solid var(--rule);
+  background:var(--surface);color:var(--ink);border-radius:3px;cursor:pointer}
+.tierrow button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 
-table{width:100%;border-collapse:collapse;background:var(--surface);
-  border:1px solid var(--rule);font-size:14px}
-thead th{
-  text-align:right;font-weight:500;font-size:12px;color:var(--muted);
-  padding:9px 10px;border-bottom:1px solid var(--rule);white-space:nowrap;
-  background:#F6F8FA;cursor:pointer;user-select:none;
-}
+.summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:18px;padding:14px 16px;
+  background:var(--surface);border:1px solid var(--rule);border-bottom:none}
+.summary h2{font-size:16px;font-weight:600;margin:0}
+.summary .kv{font-size:13px;color:var(--muted)}
+.summary .kv span{color:var(--ink)}
+
+table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--rule);font-size:14px}
+thead th{text-align:right;font-weight:500;font-size:12px;color:var(--muted);padding:9px;
+  border-bottom:1px solid var(--rule);white-space:nowrap;background:#F6F8FA;cursor:pointer;user-select:none}
 thead th:first-child,thead th:nth-child(2){text-align:left}
 thead th[aria-sort]{color:var(--ink)}
-tbody td{padding:9px 10px;border-bottom:1px solid var(--rule-soft);text-align:right;white-space:nowrap}
+tbody td{padding:9px;border-bottom:1px solid var(--rule-soft);text-align:right;white-space:nowrap}
 tbody td:first-child,tbody td:nth-child(2){text-align:left}
 tbody tr:last-child td{border-bottom:none}
 tbody tr:hover{background:#F6F8FA}
 tbody tr.pick{background:var(--pick-bg)}
-tbody tr.pick:hover{background:#DDEBE5}
 tbody tr.trap{background:var(--flag-bg)}
-tbody tr.trap:hover{background:#F5E7D3}
 .name{font-weight:500}
 .code{color:var(--muted);font-size:12px}
-.pos{color:var(--up)}
-.neg{color:var(--down)}
+.pos{color:var(--up)}.neg{color:var(--down)}
+.stale{color:var(--muted)}
 .mark{font-size:11px;padding:2px 6px;border-radius:2px;white-space:nowrap}
 .mark.pick{background:#C9E2D8;color:#0E4F3C}
 .mark.trap{background:#F0DBBB;color:#7A4206}
-
-.dev{width:190px}
-.devbar{position:relative;height:16px;width:170px;margin-left:auto}
+.tierbadge{font-size:11px;color:var(--muted);border:1px solid var(--rule);
+  border-radius:2px;padding:1px 5px;margin-left:6px}
+.devbar{position:relative;height:16px;width:150px;margin-left:auto}
 .devbar .axis{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--rule)}
 .devbar .fill{position:absolute;top:3px;height:10px}
 .devbar .fill.cheap{background:var(--down);right:50%}
 .devbar .fill.rich{background:var(--up);left:50%}
-
-.note{margin-top:18px;font-size:13px;color:var(--muted);max-width:70ch;line-height:1.65}
-.note code{font-family:"IBM Plex Mono",monospace;font-size:12px}
-.status{padding:40px 16px;background:var(--surface);border:1px solid var(--rule);
-  color:var(--muted);font-size:14px}
+.note{margin-top:18px;font-size:13px;color:var(--muted);max-width:74ch;line-height:1.65}
+.status{padding:36px 16px;background:var(--surface);border:1px solid var(--rule);color:var(--muted)}
 .status b{color:var(--ink);font-weight:500}
-@media (max-width:760px){
-  .hide-sm{display:none}
-  .dev,.devbar{width:110px}
-  .wrap{padding:20px 12px 60px}
-}
-@media (prefers-reduced-motion:no-preference){
-  tbody tr{transition:background .12s ease}
-}
+@media (max-width:820px){.hide-sm{display:none}.devbar{width:92px}.wrap{padding:20px 12px 60px}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
 <header>
-  <h1>台股產業相對估值</h1>
+  <h1>台股相對估值</h1>
   <div class="meta" id="meta"></div>
 </header>
 
-<nav class="sectors" id="sectors" aria-label="產業"></nav>
+<nav class="mode" id="mode" aria-label="分組方式">
+  <button data-m="theme" aria-pressed="true">題材</button>
+  <button data-m="industry" aria-pressed="false">官方產業</button>
+</nav>
 
-<div id="panel">
-  <div class="status" id="status">讀取證交所資料中…</div>
-</div>
+<nav class="chips" id="chips" aria-label="分組"></nav>
+<div class="tierrow" id="tierrow" hidden></div>
 
+<div id="panel"><div class="status">讀取中…</div></div>
 <p class="note" id="note"></p>
 
 </div>
 
 <script>
+const SHEET = "1-6j_9R8EtIS780FRKBv4MPAq63ySaBghRSPW2rDA48U";
+const GID = { themes: "0", company_theme: "1234232077", companies: "1330551595" };
 const EP = {
-  val:  "https://openapi.twse.com.tw/v1/exchangeReport/BWIBBU_ALL",
-  day:  "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
-  rev:  "https://openapi.twse.com.tw/v1/opendata/t187ap05_L"
+  val: "https://openapi.twse.com.tw/v1/exchangeReport/BWIBBU_ALL",
+  day: "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
+  rev: "https://openapi.twse.com.tw/v1/opendata/t187ap05_L"
 };
 const FALLBACK = "./data/latest.json";
-const MIN_PEERS = 5;
 const CHEAP_CUT = -0.15;
+const MIN_PEERS = 3;
 
 const num = v => {
-  if (v === null || v === undefined) return null;
-  const n = parseFloat(String(v).replace(/,/g, ""));
+  if (v === null || v === undefined || v === "") return null;
+  const n = parseFloat(String(v).replace(/[,%\s]/g, ""));
   return Number.isFinite(n) && n !== 0 ? n : null;
+};
+const ratio = v => {
+  const n = num(v);
+  if (n === null) return null;
+  return Math.abs(n) > 1.5 ? n / 100 : n;
 };
 const pct = (n, d = 1) => n === null ? "—" : (n >= 0 ? "+" : "") + (n * 100).toFixed(d) + "%";
 const fix = (n, d = 2) => n === null ? "—" : n.toFixed(d);
-const median = arr => {
-  const a = arr.filter(x => x !== null).sort((x, y) => x - y);
-  if (!a.length) return null;
-  const m = a.length >> 1;
-  return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+const median = a => {
+  const s = a.filter(x => x !== null && Number.isFinite(x)).sort((x, y) => x - y);
+  if (!s.length) return null;
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 };
-const rocToDate = ym => {
-  const s = String(ym);
-  if (s.length < 5) return s;
-  return (parseInt(s.slice(0, 3), 10) + 1911) + "/" + s.slice(3);
+const roc = ym => {
+  const s = String(ym || "");
+  return s.length >= 5 ? (parseInt(s.slice(0, 3), 10) + 1911) + "/" + s.slice(3) : s;
 };
+const tid = v => String(v === null || v === undefined ? "" : v).trim();
 
-let SECTORS = {}, current = null, sortKey = "dev", sortDir = 1, asOf = {};
+async function gviz(gid) {
+  const url = "https://docs.google.com/spreadsheets/d/" + SHEET +
+    "/gviz/tq?tqx=out:json&headers=1&gid=" + gid;
+  const txt = await (await fetch(url, { cache: "no-store" })).text();
+  const j = JSON.parse(txt.substring(txt.indexOf("{"), txt.lastIndexOf("}") + 1));
+  const cols = j.table.cols.map((c, i) => String(c.label || c.id || "c" + i).trim());
+  return j.table.rows.map(r => {
+    const o = {};
+    cols.forEach((c, i) => { o[c] = r.c && r.c[i] ? r.c[i].v : null; });
+    return o;
+  });
+}
 
-async function grab(url) {
-  const r = await fetch(url, { cache: "no-store" });
-  if (!r.ok) throw new Error(url + " → " + r.status);
+async function grab(u) {
+  const r = await fetch(u, { cache: "no-store" });
+  if (!r.ok) throw new Error(r.status);
   return r.json();
 }
+
+let STOCKS = {}, GROUPS = { theme: {}, industry: {} }, THEMEMETA = {};
+let mode = "theme", current = null, tier = null, sortKey = "dev", sortDir = 1, asOf = {};
 
 async function load() {
   let val, day, rev;
@@ -163,131 +164,183 @@ async function load() {
     asOf.src = "證交所 OpenAPI";
   } catch (e) {
     try {
-      const snap = await grab(FALLBACK);
-      ({ val, day, rev } = snap);
-      asOf.src = "本地快照 " + (snap.captured_at || "");
+      const s = await grab(FALLBACK);
+      val = s.val; day = s.day; rev = s.rev;
+      asOf.src = "本地快照";
     } catch (e2) {
-      document.getElementById("status").innerHTML =
-        "<b>讀不到資料。</b>直接呼叫證交所被瀏覽器擋下，而 <code>data/latest.json</code> 也還不存在。" +
-        "先讓 GitHub Actions 的每日排程跑過一次，這一頁就會改讀 repo 裡的快照。";
+      document.getElementById("panel").innerHTML =
+        '<div class="status"><b>讀不到證交所資料。</b>直接呼叫被瀏覽器擋下，' +
+        "<code>data/latest.json</code> 也不存在。先讓排程跑過一次。</div>";
       return;
     }
   }
-  build(val, day, rev);
-}
 
-function build(val, day, rev) {
-  const byCode = {};
+  let themes = [], links = [], comps = [];
+  try {
+    const got = await Promise.all(
+      [gviz(GID.themes), gviz(GID.company_theme), gviz(GID.companies)]);
+    themes = got[0]; links = got[1]; comps = got[2];
+    asOf.sheet = true;
+  } catch (e) {
+    asOf.sheet = false;
+  }
+
   for (const r of rev) {
-    const code = r["公司代號"];
-    if (!code) continue;
-    byCode[code] = {
-      code,
-      name: r["公司名稱"],
-      sector: r["產業別"],
-      yoy: num(r["營業收入-去年同月增減(%)"]) === null ? null : num(r["營業收入-去年同月增減(%)"]) / 100,
-      cum: num(r["累計營業收入-前期比較增減(%)"]) === null ? null : num(r["累計營業收入-前期比較增減(%)"]) / 100,
-      ym: r["資料年月"]
+    const c = tid(r["公司代號"]);
+    if (!c) continue;
+    STOCKS[c] = {
+      code: c, name: r["公司名稱"], industry: r["產業別"],
+      yoy: ratio(r["營業收入-去年同月增減(%)"]),
+      cum: ratio(r["累計營業收入-前期比較增減(%)"])
     };
     asOf.ym = r["資料年月"];
   }
   for (const v of val) {
-    const t = byCode[v.Code];
-    if (!t) continue;
-    t.pe = num(v.PEratio);
-    t.pb = num(v.PBratio);
-    t.yield = num(v.DividendYield) === null ? null : num(v.DividendYield) / 100;
+    const t = STOCKS[tid(v.Code)]; if (!t) continue;
+    t.pe = num(v.PEratio); t.pb = num(v.PBratio); t.dy = ratio(v.DividendYield);
   }
   for (const d of day) {
-    const t = byCode[d.Code];
-    if (!t) continue;
-    t.close = num(d.ClosingPrice);
-    t.chg = num(d.Change);
-    asOf.day = d.Date || asOf.day;
+    const t = STOCKS[tid(d.Code)]; if (!t) continue;
+    t.close = num(d.ClosingPrice); asOf.day = d.Date || asOf.day;
+  }
+  for (const c of comps) {
+    const t = STOCKS[tid(c.ticker)]; if (!t) continue;
+    t.opm = ratio(c.op_margin); t.gpm = ratio(c.gross_margin);
+    t.epsTtm = num(c.eps_ttm); t.quarter = tid(c.quarter); t.mainBiz = c.main_business;
   }
 
-  SECTORS = {};
-  for (const t of Object.values(byCode)) {
-    if (!t.sector || (t.pe === null && t.pb === null)) continue;
-    (SECTORS[t.sector] ||= []).push(t);
-  }
-
-  for (const [name, list] of Object.entries(SECTORS)) {
-    const mPE = median(list.map(t => t.pe));
-    const mPB = median(list.map(t => t.pb));
-    const mY  = median(list.map(t => t.yield));
-    const mG  = median(list.map(t => t.yoy));
-    list.meta = { mPE, mPB, mY, mG, enough: list.length >= MIN_PEERS };
-    for (const t of list) {
-      const devs = [];
-      if (t.pe !== null && mPE) devs.push(t.pe / mPE - 1);
-      if (t.pb !== null && mPB) devs.push(t.pb / mPB - 1);
-      t.dev = devs.length ? devs.reduce((a, b) => a + b, 0) / devs.length : null;
-      t.cheap = t.dev !== null && t.dev <= CHEAP_CUT;
-      t.growthOk = t.yoy !== null && mG !== null && t.yoy >= mG;
-      t.flag = !t.cheap ? "" : (t.growthOk ? "pick" : "trap");
+  for (const t of Object.values(STOCKS)) {
+    if (t.industry && (t.pe !== null || t.pb !== null)) {
+      GROUPS.industry[t.industry] = GROUPS.industry[t.industry] || [];
+      GROUPS.industry[t.industry].push(t);
     }
   }
-
-  const names = Object.keys(SECTORS).sort((a, b) => SECTORS[b].length - SECTORS[a].length);
-  const nav = document.getElementById("sectors");
-  nav.innerHTML = "";
-  for (const n of names) {
-    const b = document.createElement("button");
-    b.textContent = n + " " + SECTORS[n].length;
-    b.setAttribute("aria-pressed", "false");
-    b.onclick = () => select(n);
-    nav.appendChild(b);
+  for (const th of themes) {
+    const id = tid(th.theme_id); if (!id) continue;
+    THEMEMETA[id] = { name: th["正名"] || id, parent: th["上層題材"] || "" };
+  }
+  for (const l of links) {
+    const t = STOCKS[tid(l.ticker)], id = tid(l.theme_id);
+    if (!t || !THEMEMETA[id]) continue;
+    if (t.pe === null && t.pb === null) continue;
+    const row = Object.assign({}, t, { tier: tid(l.current_max_tier) });
+    GROUPS.theme[id] = GROUPS.theme[id] || [];
+    GROUPS.theme[id].push(row);
   }
 
   document.getElementById("meta").innerHTML =
-    "收盤 <b>" + (asOf.day ? rocToDate(asOf.day.slice(0,7)) + "/" + asOf.day.slice(7) : "—") +
-    "</b> · 營收 <b>" + rocToDate(asOf.ym) + "</b> · " + asOf.src;
+    "收盤 <b>" + (asOf.day ? roc(asOf.day.slice(0, 7)) + "/" + asOf.day.slice(7) : "—") +
+    "</b> · 營收 <b>" + roc(asOf.ym) + "</b><br>" + asOf.src +
+    (asOf.sheet ? " ＋ 題材表" : " · 題材表讀取失敗");
 
   document.getElementById("note").innerHTML =
-    "偏離＝該檔本益比與股價淨值比對產業中位數的平均偏離，負值代表相對同業便宜。" +
-    "綠底是折價且營收年增不低於同業中位數；" +
-    "琥珀底是折價但成長落後同業——那通常不是機會，是它本來就該便宜。" +
-    "同業少於 " + MIN_PEERS + " 檔的產業中位數不穩定，已標示。" +
-    "資料為證交所公開資訊，僅供研究，不構成投資建議。";
+    "偏離＝本益比與股價淨值比對組內中位數的平均偏離，負值代表相對同組便宜。" +
+    "綠底是折價且營益率不低於組內中位數；琥珀底是折價但獲利能力落後——那通常不是機會。" +
+    "營益率與毛利率來自題材表，是人工維護的資料，會比當日股價舊；" +
+    "灰色數字代表該檔的財報季度落後組內最新。" +
+    "組內少於 " + MIN_PEERS + " 檔時中位數不具意義。僅供研究，不構成投資建議。";
 
-  select(names[0]);
+  for (const b of document.getElementById("mode").children)
+    b.onclick = () => { mode = b.dataset.m; buildChips(); };
+  buildChips();
 }
 
-function select(name) {
-  current = name;
-  for (const b of document.getElementById("sectors").children)
-    b.setAttribute("aria-pressed", String(b.textContent.startsWith(name + " ")));
+function buildChips() {
+  for (const b of document.getElementById("mode").children)
+    b.setAttribute("aria-pressed", String(b.dataset.m === mode));
+  const g = GROUPS[mode];
+  const keys = Object.keys(g).sort(function (a, b) { return g[b].length - g[a].length; });
+  const nav = document.getElementById("chips");
+  nav.innerHTML = "";
+  if (!keys.length) {
+    document.getElementById("tierrow").hidden = true;
+    document.getElementById("panel").innerHTML =
+      '<div class="status">題材表沒讀到資料，切到「官方產業」還是可以用。</div>';
+    return;
+  }
+  for (const k of keys) {
+    const b = document.createElement("button");
+    b.textContent = (mode === "theme" ? THEMEMETA[k].name : k) + " " + g[k].length;
+    b.dataset.k = k;
+    b.onclick = function () { current = k; tier = null; buildTiers(); };
+    nav.appendChild(b);
+  }
+  current = keys[0]; tier = null; buildTiers();
+}
+
+function buildTiers() {
+  for (const b of document.getElementById("chips").children)
+    b.setAttribute("aria-pressed", String(b.dataset.k === current));
+  const row = document.getElementById("tierrow");
+  if (mode !== "theme") { row.hidden = true; render(); return; }
+  const seen = {};
+  for (const t of GROUPS.theme[current]) if (t.tier) seen[t.tier] = 1;
+  const tiers = Object.keys(seen).sort().reverse();
+  if (!tiers.length) { row.hidden = true; render(); return; }
+  if (tier === null) tier = tiers[0];
+  row.hidden = false;
+  row.innerHTML = '<span class="lbl">曝險層級</span>';
+  for (const tv of tiers.concat(["全部"])) {
+    const b = document.createElement("button");
+    b.textContent = tv;
+    b.setAttribute("aria-pressed", String(tv === tier));
+    b.onclick = function () { tier = tv; buildTiers(); };
+    row.appendChild(b);
+  }
   render();
 }
 
 function render() {
-  const list = SECTORS[current], m = list.meta;
-  const rows = [...list].sort((a, b) => {
-    const av = a[sortKey], bv = b[sortKey];
-    if (av === null) return 1;
-    if (bv === null) return -1;
-    return (av - bv) * sortDir;
+  let list = GROUPS[mode][current];
+  if (mode === "theme" && tier && tier !== "全部") list = list.filter(t => t.tier === tier);
+
+  const mPE = median(list.map(t => t.pe)), mPB = median(list.map(t => t.pb));
+  const mOPM = median(list.map(t => t.opm)), mG = median(list.map(t => t.yoy));
+  const mDY = median(list.map(t => t.dy));
+  const quarters = list.map(t => t.quarter).filter(Boolean).sort();
+  const newestQ = quarters[quarters.length - 1];
+
+  for (const t of list) {
+    const d = [];
+    if (t.pe !== null && mPE) d.push(t.pe / mPE - 1);
+    if (t.pb !== null && mPB) d.push(t.pb / mPB - 1);
+    t.dev = d.length ? d.reduce((a, b) => a + b, 0) / d.length : null;
+    const cheap = t.dev !== null && t.dev <= CHEAP_CUT;
+    let ok = null;
+    if (t.opm !== null && mOPM !== null) ok = t.opm >= mOPM;
+    else if (t.yoy !== null && mG !== null) ok = t.yoy >= mG;
+    t.flag = (!cheap || ok === null) ? "" : (ok ? "pick" : "trap");
+  }
+
+  const rows = list.slice().sort(function (a, b) {
+    const x = a[sortKey], y = b[sortKey];
+    if (x === null || x === undefined) return 1;
+    if (y === null || y === undefined) return -1;
+    return typeof x === "string" ? x.localeCompare(y) * sortDir : (x - y) * sortDir;
   });
-  const maxAbs = Math.max(0.35, ...list.map(t => Math.abs(t.dev || 0)).filter(Number.isFinite));
+  let maxAbs = 0.35;
+  for (const t of list) if (t.dev !== null) maxAbs = Math.max(maxAbs, Math.abs(t.dev));
 
-  const th = (key, label, cls) =>
-    '<th data-k="' + key + '" class="' + (cls || "") + '"' +
-    (sortKey === key ? ' aria-sort="' + (sortDir === 1 ? "ascending" : "descending") + '"' : "") +
-    ">" + label + "</th>";
+  const th = (k, l, c) => '<th data-k="' + k + '" class="' + (c || "") + '"' +
+    (sortKey === k ? ' aria-sort="' + (sortDir === 1 ? "ascending" : "descending") + '"' : "") +
+    ">" + l + "</th>";
 
-  let h = '<div class="bar-summary"><h2>' + current + "</h2>" +
-    '<div class="kv">' + list.length + ' 檔' + (m.enough ? "" : "（同業過少）") + "</div>" +
-    '<div class="kv">中位數 PE <span class="num">' + fix(m.mPE) + "</span></div>" +
-    '<div class="kv">PB <span class="num">' + fix(m.mPB) + "</span></div>" +
-    '<div class="kv">殖利率 <span class="num">' + pct(m.mY) + "</span></div>" +
-    '<div class="kv">營收年增 <span class="num">' + pct(m.mG) + "</span></div></div>";
+  const title = mode === "theme" ? THEMEMETA[current].name : current;
+  const parent = mode === "theme" && THEMEMETA[current].parent
+    ? '<div class="kv">上層 <span>' + THEMEMETA[current].parent + "</span></div>" : "";
 
-  h += "<table><thead><tr>" +
-    th("code", "代號") + th("code", "名稱") +
+  let h = '<div class="summary"><h2>' + title + "</h2>" + parent +
+    '<div class="kv">' + list.length + " 檔" +
+      (list.length < MIN_PEERS ? "（過少）" : "") + "</div>" +
+    '<div class="kv">中位數 PE <span class="num">' + fix(mPE) + "</span></div>" +
+    '<div class="kv">PB <span class="num">' + fix(mPB) + "</span></div>" +
+    '<div class="kv">營益率 <span class="num">' + pct(mOPM) + "</span></div>" +
+    '<div class="kv">殖利率 <span class="num">' + pct(mDY) + "</span></div></div>";
+
+  h += "<table><thead><tr>" + th("code", "代號") + th("name", "名稱") +
     th("close", "收盤", "hide-sm") + th("pe", "本益比") + th("pb", "股價淨值比") +
-    th("yield", "殖利率", "hide-sm") + th("yoy", "營收年增") +
-    th("dev", "偏離中位數") + "<th></th></tr></thead><tbody>";
+    th("opm", "營益率") + th("gpm", "毛利率", "hide-sm") +
+    th("yoy", "營收年增") + th("dev", "偏離中位數") + "<th></th></tr></thead><tbody>";
 
   for (const t of rows) {
     const w = t.dev === null ? 0 : Math.min(1, Math.abs(t.dev) / maxAbs) * 50;
@@ -295,31 +348,32 @@ function render() {
       '<div class="devbar"><div class="axis"></div><div class="fill ' +
       (t.dev < 0 ? "cheap" : "rich") + '" style="width:' + w.toFixed(1) + '%"></div></div>';
     const mark = t.flag === "pick" ? '<span class="mark pick">折價候選</span>'
-               : t.flag === "trap" ? '<span class="mark trap">便宜有理由</span>' : "";
-    h += '<tr class="' + t.flag + '" title="' + t.name +
-      "：本益比 " + fix(t.pe) + "（同業 " + fix(m.mPE) + "）、股價淨值比 " + fix(t.pb) +
-      "（同業 " + fix(m.mPB) + "）、營收年增 " + pct(t.yoy) + "（同業 " + pct(m.mG) + "）" + '">' +
+      : t.flag === "trap" ? '<span class="mark trap">便宜有理由</span>' : "";
+    const badge = (mode === "theme" && t.tier && tier === "全部")
+      ? '<span class="tierbadge">' + t.tier + "</span>" : "";
+    const stale = (t.quarter && newestQ && t.quarter < newestQ) ? "stale" : "";
+    const tip = (t.mainBiz || t.name) + (t.quarter ? "｜財報季 " + t.quarter : "");
+    h += '<tr class="' + t.flag + '" title="' + String(tip).replace(/"/g, "&quot;") + '">' +
       '<td class="num code">' + t.code + "</td>" +
-      '<td class="name">' + t.name + "</td>" +
+      '<td class="name">' + t.name + badge + "</td>" +
       '<td class="num hide-sm">' + fix(t.close, 1) + "</td>" +
       '<td class="num">' + fix(t.pe) + "</td>" +
       '<td class="num">' + fix(t.pb) + "</td>" +
-      '<td class="num hide-sm">' + pct(t.yield) + "</td>" +
+      '<td class="num ' + stale + '">' + pct(t.opm) + "</td>" +
+      '<td class="num hide-sm ' + stale + '">' + pct(t.gpm) + "</td>" +
       '<td class="num ' + (t.yoy === null ? "" : t.yoy >= 0 ? "pos" : "neg") + '">' + pct(t.yoy, 0) + "</td>" +
-      '<td class="dev num ' + (t.dev === null ? "" : t.dev < 0 ? "neg" : "pos") + '">' +
-        pct(t.dev, 0) + bar + "</td>" +
+      '<td class="num ' + (t.dev === null ? "" : t.dev < 0 ? "neg" : "pos") + '">' + pct(t.dev, 0) + bar + "</td>" +
       "<td>" + mark + "</td></tr>";
   }
   h += "</tbody></table>";
   document.getElementById("panel").innerHTML = h;
 
-  for (const el of document.querySelectorAll("thead th[data-k]")) {
-    el.onclick = () => {
+  for (const el of document.querySelectorAll("thead th[data-k]"))
+    el.onclick = function () {
       const k = el.dataset.k;
       if (k === sortKey) sortDir *= -1; else { sortKey = k; sortDir = 1; }
       render();
     };
-  }
 }
 
 load();
