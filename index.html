@@ -26,6 +26,7 @@ h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
 .mode{display:flex;margin-bottom:14px;border-bottom:1px solid var(--rule)}
 .mode button{font:inherit;font-size:14px;padding:7px 16px;border:none;background:none;
   color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.warn{color:#B45309}
 .mode button[aria-pressed="true"]{color:var(--ink);font-weight:500;border-bottom-color:var(--ink)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .chips button{font:inherit;font-size:13px;padding:5px 11px;border:1px solid var(--rule);
@@ -108,7 +109,14 @@ function num(v){
   var n=parseFloat(String(v).replace(/[,%\s]/g,""));
   return (isFinite(n)&&n!==0)?n:null;
 }
-function ratio(v){var n=num(v);if(n===null)return null;return Math.abs(n)>1.5?n/100:n;}
+// 百分比一律不猜單位。猜的代價：48 家公司的營收年增曾被放大一百倍
+// （維熹 -1.26% 顯示成 -126%），因為舊版用「絕對值 >1.5 才除以 100」判斷。
+function pctAPI(v){var n=num(v);return n===null?null:n/100;}          // 端點給的是百分比數值
+function pctCell(v){                                                   // Sheet 欄位：看有沒有 % 號
+  var s=String(v===null||v===undefined?"":v);
+  var n=num(s);if(n===null)return null;
+  return s.indexOf("%")>=0?n/100:n;   // 沒有 % 就視為已是小數；格式不一致會明顯爆掉而非靜默錯
+}
 function pct(n,d){if(n===null)return "—";d=(d===undefined?1:d);return (n>=0?"+":"")+(n*100).toFixed(d)+"%";}
 function fix(n,d){if(n===null)return "—";return n.toFixed(d===undefined?2:d);}
 function median(a){
@@ -167,14 +175,18 @@ var STOCKS={},GROUPS={theme:{},industry:{}},THEMEMETA={},DIAG={},asOf={};
 var mode="theme",current=null,tier=null,sortKey="dev",sortDir=1;
 
 async function load(){
-  var val,day,rev;
+  // 本地快照優先：它同源、不受 CORS 擋，而且含上櫃；直接打端點只拿得到上市。
+  var val=null,day=null,rev=null,rows=null;
   try{
-    var a=await Promise.all([grab(EP.val),grab(EP.day),grab(EP.rev)]);
-    val=a[0];day=a[1];rev=a[2];asOf.src="證交所 OpenAPI";
+    var s=await grab(FALLBACK);
+    asOf.src="本地快照";
+    if(s.rows){rows=s.rows;asOf.iso=s.as_of;asOf.ym=s.ym;
+               asOf.markets=s.markets||{};asOf.missing=s.missing||[];}
+    else{val=s.val;day=s.day;rev=s.rev;asOf.missing=["tpex"];}
   }catch(e){
     try{
-      var s=await grab(FALLBACK);
-      val=s.val;day=s.day;rev=s.rev;asOf.src="本地快照";
+      var a=await Promise.all([grab(EP.val),grab(EP.day),grab(EP.rev)]);
+      val=a[0];day=a[1];rev=a[2];asOf.src="證交所 OpenAPI";asOf.missing=["tpex"];
     }catch(e2){
       document.getElementById("panel").innerHTML=
         '<div class="status"><b>讀不到證交所資料。</b>直接呼叫被瀏覽器擋下，'+
@@ -193,16 +205,29 @@ async function load(){
     asOf.sheet=false;DIAG.err=String(e);
   }
 
+  if(rows){
+    for(var j=0;j<rows.length;j++){
+      var q=rows[j],qc=tid(q.c);
+      if(!qc)continue;
+      STOCKS[qc]={code:qc,name:q.n,industry:q.i,market:q.m,
+        yoy:pctAPI(q.yoy),cum:pctAPI(q.cum),
+        pe:num(q.pe),pb:num(q.pb),dy:pctAPI(q.dy),close:num(q.close),
+        opm:null,gpm:null,quarter:null,mainBiz:""};
+    }
+    rev=[];val=[];day=[];
+  }
   for(var i=0;i<rev.length;i++){
     var r=rev[i],c=tid(r["公司代號"]);
     if(!c)continue;
     STOCKS[c]={code:c,name:r["公司名稱"],industry:r["產業別"],
-      yoy:ratio(r["營業收入-去年同月增減(%)"]),cum:ratio(r["累計營業收入-前期比較增減(%)"])};
+      market:"twse",
+      yoy:pctAPI(r["營業收入-去年同月增減(%)"]),cum:pctAPI(r["累計營業收入-前期比較增減(%)"]),
+      pe:null,pb:null,dy:null,close:null,opm:null,gpm:null,quarter:null,mainBiz:""};
     asOf.ym=r["資料年月"];
   }
   for(i=0;i<val.length;i++){
     var t=STOCKS[tid(val[i].Code)];if(!t)continue;
-    t.pe=num(val[i].PEratio);t.pb=num(val[i].PBratio);t.dy=ratio(val[i].DividendYield);
+    t.pe=num(val[i].PEratio);t.pb=num(val[i].PBratio);t.dy=pctAPI(val[i].DividendYield);
   }
   for(i=0;i<day.length;i++){
     var t2=STOCKS[tid(day[i].Code)];if(!t2)continue;
@@ -210,7 +235,7 @@ async function load(){
   }
   for(i=0;i<comps.length;i++){
     var cc=comps[i],t3=STOCKS[tid(cc.ticker)];if(!t3)continue;
-    t3.opm=ratio(cc.op_margin);t3.gpm=ratio(cc.gross_margin);
+    t3.opm=pctCell(cc.op_margin);t3.gpm=pctCell(cc.gross_margin);
     t3.quarter=tid(cc.quarter);t3.mainBiz=cc.main_business;
   }
 
@@ -238,10 +263,16 @@ async function load(){
   }
   DIAG.matched=matched;
 
+  var MKT={twse:"上市",tpex:"上櫃"};
+  var dstr=asOf.iso?asOf.iso.replace(/-/g,"/")
+          :(asOf.day?roc(asOf.day.slice(0,7))+"/"+asOf.day.slice(7):"—");
+  var cov=[];for(var mk in (asOf.markets||{}))cov.push(MKT[mk]||mk);
+  var miss=(asOf.missing||[]).map(function(x){return MKT[x]||x;});
   document.getElementById("meta").innerHTML=
-    "收盤 <b>"+(asOf.day?roc(asOf.day.slice(0,7))+"/"+asOf.day.slice(7):"—")+
-    "</b> · 營收 <b>"+roc(asOf.ym)+"</b><br>"+asOf.src+
-    (asOf.sheet?" ＋ 題材表":" · 題材表讀取失敗");
+    "收盤 <b>"+dstr+"</b> · 營收 <b>"+roc(asOf.ym)+"</b><br>"+
+    asOf.src+(cov.length?"（"+cov.join("＋")+"）":"")+
+    (asOf.sheet?" ＋ 題材表":" · 題材表讀取失敗")+
+    (miss.length?'<br><b class="warn">缺'+miss.join("、")+"，中位數只算在部分樣本上</b>":"");
 
   document.getElementById("note").innerHTML=
     "偏離＝本益比與股價淨值比對組內中位數的平均偏離，負值代表相對同組便宜。"+
